@@ -23,7 +23,7 @@ const UserSchema = mongoose.Schema(
     password: {
       type: String,
       required: [true, "Please Enter Password"],
-      // minLength: [8, "Password must contain 8 char.. "],
+      minLength: [8, "Password must contain 8 char.. "],
     },
     role: {
       type: String,
@@ -31,7 +31,8 @@ const UserSchema = mongoose.Schema(
       default: "user",
     },
 
-    resetPasswordToken: String,
+    resetPasswordOTP: Number,
+    // resetPasswordToken: String,
     resetPasswordExpire: Date,
   },
   {
@@ -59,16 +60,24 @@ UserSchema.methods.comparePasswords = async function (enteredPassword) {
 };
 
 //reset password
-UserSchema.methods.generateResetPasswordToken = function () {
-  //generate a new random token
-  const resetToken = crypto.randomBytes(32).toString("hex");
-  //creating hax of token to make secure
-  this.resetPasswordToken = crypto
-    .createHash("sha256")
-    .update(resetToken)
-    .digest("hex");
+// UserSchema.methods.generateResetPasswordToken = function () {
+//   //generate a new random token
+//   const resetToken = crypto.randomBytes(32).toString("hex");
+//   //creating hax of token to make secure
+//   this.resetPasswordToken = crypto
+//     .createHash("sha256")
+//     .update(resetToken)
+//     .digest("hex");
+//   this.resetPasswordExpire = Date.now() + 5 * 60 * 1000; //token expire after 10 minutes
+//   return resetToken;
+// };
+
+UserSchema.methods.generateResetPasswordOTP = function () {
+  //generate a new random otp
+  const otp = Math.floor(Math.random() * 1000000);
+  this.resetPasswordOTP = otp;
   this.resetPasswordExpire = Date.now() + 5 * 60 * 1000; //token expire after 10 minutes
-  return resetToken;
+  return otp;
 };
 
 module.exports = mongoose.model("User", UserSchema);

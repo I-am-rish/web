@@ -21,13 +21,13 @@ router.route("/register").post(registerUser);
 router.route("/login").post(loginUser);
 router.route("/logout").get(logOutUser);
 router.route("/password/forget").post(forgotPassword);
-router.route("/password/reset/:token").put(resetPassword);
+router.route("/password/reset").put(resetPassword);
 router.route("/user/profile").get(isAuthenticatedUser, getProfile);
 router.route("/user/profile/update").put(isAuthenticatedUser, updateProfile);
 router.route("/user/delete").delete(isAuthenticatedUser, deleteAccount);
 
 //admin routes
-router.route("/admin/users").get( allUsers);
+router.route("/admin/users").get(allUsers);
 router
   .route("/admin/users/user/delete")
   .delete(isAuthenticatedUser, authorizeRole, deleteUser);

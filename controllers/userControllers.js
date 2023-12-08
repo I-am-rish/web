@@ -8,10 +8,15 @@ const crypto = require("crypto");
 //register user
 exports.registerUser = async (req, res, next) => {
   const { name, email, mobile, password } = req.body;
-  console.log(req.body);
   try {
     let user = await User.findOne({ email });
     if (!user) {
+      if (password.length < 8) {
+        return res.status(400).json({
+          success: false,
+          msg: "Password must be more then 8 characters",
+        });
+      }
       // create a new user and save it to the database
       user = new User({
         name,
@@ -19,8 +24,8 @@ exports.registerUser = async (req, res, next) => {
         mobile,
         password,
       });
-      await user.save();
-      return res.status(201).json({ message: "User created" });
+      // await user.save();
+      return res.status(201).json({ success: true, message: "User created" });
     } else {
       return res.status(400).json({
         success: false,
@@ -143,84 +148,77 @@ exports.forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
     if (!email) {
-      throw Error("Please enter your registered email");
+      return res.status(400).json({
+        success: false,
+        msg: "Please enter your registered email",
+      });
     } else {
       let user = await User.findOne({ email });
-      await user.save({ resetPasswordToken: null });
+      await user.save({ resetPasswordOTP: null });
       if (!user) {
         return res.status(404).json({
           success: false,
           msg: "No account associated to this email",
         });
-      } else {
-        const token = await user.generateResetPasswordToken();
-        await user.save({ validateBeforeSave: false });
-        const resetUrl = `${req.protocol}://${req.get(
-          "host"
-        )}/api/password/reset/:${token}`;
-
-        const mailOptions = {
-          email,
-          subject: "Reset Password Link",
-          message: `You are receiving this email because you (or someone else) have requested the reset of the password for your account.\n\n
-          Please click on the following link, or paste this into your browser to complete the process:\n\n
-          ${resetUrl}\n\n
-          If you did not request this, please ignore this email and your password will remain unchanged.\n`,
-        };
-        await sendEmail(mailOptions);
-        return res.status(200).json({
-          message: `Email sent to ${email} successfully`,
-        });
       }
+      // const token = await user.generateResetPasswordToken();
+      const otp = await user.generateResetPasswordOTP();
+      await user.save({ validateBeforeSave: false });
+      // const resetUrl = `${req.protocol}://${req.get(
+      //   "host"
+      // )}/api/password/reset/:${token}`;
+
+      //generate random otp
+
+      const mailOptions = {
+        email,
+        subject: "Reset Password OTP",
+        message: `You are receiving this email because you (or someone else) have requested the reset of the password for your account.\n
+          Your OTP IS:  ${otp} \n
+          If you did not request this, please ignore this email and your password will remain unchanged.\n`,
+      };
+      await sendEmail(mailOptions);
+      return res.status(200).json({
+        success: true,
+        message: `Email sent to ${email} successfully`,
+      });
     }
   } catch (error) {
-    return res.status(401).json({ msg: error.message });
+    return res.status(401).json({ success: false, msg: error.message });
   }
 };
 
 //reset password
 exports.resetPassword = async (req, res, next) => {
-  const { token } = req.params;
-  const { new_password, confirm_new_password } = req.body;
+  const { otp, new_password } = req.body;
+  console.log(otp, new_password);
   try {
-    if (!new_password || !confirm_new_password) {
+    if (!new_password) {
       return res.status(400).json({
         success: false,
-        msg: "Please Provide New Password and Confirm Password",
+        msg: "Please Provide New Password",
       });
     }
-    const resetPasswordToken = crypto
-      .createHash("sha256")
-      .update(token)
-      .digest("hex");
 
     const user = await User.findOne({
-      resetPasswordToken,
-      resetPasswordExpire: { $gt: Date.now() },
+      resetPasswordOTP: otp,
     });
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        msg: "Invalid Token!!",
-      });
-    }
-
-    if (new_password !== confirm_new_password) {
-      return res.status(400).json({
-        success: false,
-        msg: "Password didn't match",
+        msg: "Invalid OTP",
       });
     }
     user.password = new_password;
     user.resetPasswordExpire = undefined;
-    user.resetPasswordToken = undefined;
+    user.resetPasswordOTP = undefined;
     await user.save();
     sendToken(user, 200, res);
   } catch (error) {
     return res.status(400).json({
       success: false,
-      msg: error.message,
+      msg: "Invalid OTP",
     });
   }
 };
@@ -307,7 +305,9 @@ exports.updateRole = async (req, res, next) => {
   try {
     const { role } = req.body;
     if (!role) {
-      return res.status(400).json({ msg: "Please provide Role" });
+      return res
+        .status(400)
+        .json({ success: false, msg: "Please provide Role" });
     }
     const newRole = { role };
     const userId = req.query.id;
@@ -327,6 +327,7 @@ exports.updateRole = async (req, res, next) => {
     });
   } catch (error) {
     return res.status(500).json({
+      success: false,
       msg: error.message,
     });
   }
