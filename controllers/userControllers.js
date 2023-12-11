@@ -1,4 +1,3 @@
-const { log } = require("console");
 const User = require("../models/userModel");
 const ApiFeatures = require("../utils/apiFeatures");
 const sendToken = require("../utils/jwtToken");
@@ -14,7 +13,7 @@ exports.registerUser = async (req, res, next) => {
       if (password.length < 8) {
         return res.status(400).json({
           success: false,
-          msg: "Password must be more then 8 characters",
+          message: "Password must be more then 8 characters",
         });
       }
       // create a new user and save it to the database
@@ -29,13 +28,13 @@ exports.registerUser = async (req, res, next) => {
     } else {
       return res.status(400).json({
         success: false,
-        msg: "User Already Exist",
+        message: "User Already Exist",
       });
     }
   } catch (error) {
     return res.status(409).json({
       success: false,
-      msg: error.message,
+      message: error.message,
     });
   }
 };
@@ -47,14 +46,14 @@ exports.loginUser = async (req, res, next) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        msg: "Please provide an email and password",
+        message: "Please provide an email and password",
       });
     }
     let user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({
         success: false,
-        msg: "Invalid Email or Password",
+        message: "Invalid Email or Password",
       });
     } else {
       const isPasswordMatched = await user.comparePasswords(password);
@@ -63,14 +62,14 @@ exports.loginUser = async (req, res, next) => {
       } else {
         return res.status().json({
           success: false,
-          msg: "Password didn't matched",
+          message: "Password didn't matched",
         });
       }
     }
   } catch (error) {
     return res.status(404).json({
       success: false,
-      msg: "Invalid Email or Password",
+      message: "Invalid Email or Password",
     });
   }
 };
@@ -81,7 +80,7 @@ exports.logOutUser = async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    msg: "Logged out",
+    message: "Logged out",
   });
 };
 
@@ -92,7 +91,7 @@ exports.getProfile = async (req, res, next) => {
     if (!user) {
       return res.status(403).json({
         success: false,
-        msg: "Error While Getting Profile",
+        message: "Error While Getting Profile",
       });
     } else {
       return res.status(200).json({
@@ -103,7 +102,7 @@ exports.getProfile = async (req, res, next) => {
   } catch (err) {
     return res.status(500).json({
       success: false,
-      msg: err.message,
+      message: err.message,
     });
   }
 };
@@ -127,18 +126,18 @@ exports.updateProfile = async (req, res, next) => {
     if (!updatedUser) {
       return res.status(400).json({
         success: false,
-        msg: "Something Went Wrong!",
+        message: "Something Went Wrong!",
       });
     }
 
     return res.status(200).json({
       success: true,
-      msg: "Profile Updated Successfully",
+      message: "Profile Updated Successfully",
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      msg: error.msg || "Server Error",
+      message: error.message || "Server Error",
     });
   }
 };
@@ -150,25 +149,21 @@ exports.forgotPassword = async (req, res, next) => {
     if (!email) {
       return res.status(400).json({
         success: false,
-        msg: "Please enter your registered email",
+        message: "Please enter your registered email",
       });
     } else {
       let user = await User.findOne({ email });
-      await user.save({ resetPasswordOTP: null });
       if (!user) {
         return res.status(404).json({
           success: false,
-          msg: "No account associated to this email",
+          message: "No account associated to this email",
         });
       }
+
       // const token = await user.generateResetPasswordToken();
       const otp = await user.generateResetPasswordOTP();
       await user.save({ validateBeforeSave: false });
-      // const resetUrl = `${req.protocol}://${req.get(
-      //   "host"
-      // )}/api/password/reset/:${token}`;
-
-      //generate random otp
+      // console.log(user);
 
       const mailOptions = {
         email,
@@ -177,11 +172,21 @@ exports.forgotPassword = async (req, res, next) => {
           Your OTP IS:  ${otp} \n
           If you did not request this, please ignore this email and your password will remain unchanged.\n`,
       };
-      await sendEmail(mailOptions);
-      return res.status(200).json({
-        success: true,
-        message: `Email sent to ${email} successfully`,
-      });
+      try {
+        await sendEmail(mailOptions);
+        return res.status(200).json({
+          success: true,
+          message: `Email sent to ${email} successfully`,
+        });
+      } catch (error) {
+        user.resetPasswordExpire = undefined;
+        user.resetPasswordOTP = undefined;
+        await user.save({ validateBeforeSave: false });
+        return res.status(500).json({
+          success: false,
+          message: error.message,
+        });
+      }
     }
   } catch (error) {
     return res.status(401).json({ success: false, msg: error.message });
@@ -190,35 +195,44 @@ exports.forgotPassword = async (req, res, next) => {
 
 //reset password
 exports.resetPassword = async (req, res, next) => {
-  const { otp, new_password } = req.body;
-  console.log(otp, new_password);
+  const { resetOTP, new_password } = req.body;
   try {
+    console.log(typeof resetOTP);
     if (!new_password) {
       return res.status(400).json({
         success: false,
-        msg: "Please Provide New Password",
+        message: "Please Provide New Password",
       });
     }
+    //otp
+    const resetPasswordOTP = crypto
+      .createHash("sha256")
+      .update(resetOTP)
+      .digest("hex");
+
+    console.log(resetPasswordOTP);
 
     const user = await User.findOne({
-      resetPasswordOTP: otp,
+      resetPasswordOTP,
+      resetPasswordExpire: { $gt: Date.now() },
     });
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        msg: "Invalid OTP",
+        message: "Invalid OTP",
       });
     }
     user.password = new_password;
     user.resetPasswordExpire = undefined;
     user.resetPasswordOTP = undefined;
+    console.log(user);
     await user.save();
     sendToken(user, 200, res);
   } catch (error) {
     return res.status(400).json({
       success: false,
-      msg: "Invalid OTP",
+      message: error.message, //"Something Went Wrong",
     });
   }
 };
@@ -247,7 +261,7 @@ exports.allUsers = async (req, res, next) => {
   try {
     const pageNumber = req.query.pageNumber || 1;
     const resultPerPage = req.query.resultPerPage || 10;
-    const userCount = await User.countDocuments();
+    const usersCount = await User.countDocuments();
     const apiFeatures = new ApiFeatures(User.find(), pageNumber).pagination(
       resultPerPage
     );
@@ -258,14 +272,14 @@ exports.allUsers = async (req, res, next) => {
     if (!users) {
       return res.status(400).json({
         success: true,
-        msg: "No User Found",
+        message: "No User Found",
       });
     }
-    return res.status(200).json({ success: true, userCount, data: { users } });
+    return res.status(200).json({ success: true, usersCount, users });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      msg: "Something went wrong!",
+      message: "Something went wrong!",
       error: error.message,
     });
   }

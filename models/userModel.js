@@ -31,8 +31,7 @@ const UserSchema = mongoose.Schema(
       default: "user",
     },
 
-    resetPasswordOTP: Number,
-    // resetPasswordToken: String,
+    resetPasswordOTP: String,
     resetPasswordExpire: Date,
   },
   {
@@ -74,10 +73,13 @@ UserSchema.methods.comparePasswords = async function (enteredPassword) {
 
 UserSchema.methods.generateResetPasswordOTP = function () {
   //generate a new random otp
-  const otp = Math.floor(Math.random() * 1000000);
-  this.resetPasswordOTP = otp;
+  const resetOTP = Math.floor(Math.random() * 1000000).toString();
+  this.resetPasswordOTP = crypto
+    .createHash("sha256")
+    .update(resetOTP)
+    .digest("hex");
   this.resetPasswordExpire = Date.now() + 5 * 60 * 1000; //token expire after 10 minutes
-  return otp;
+  return resetOTP;
 };
 
 module.exports = mongoose.model("User", UserSchema);
