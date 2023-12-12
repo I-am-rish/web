@@ -8,7 +8,7 @@ class ApiFeatures {
 
   //pagination
   pagination(resultPerPage) {
-    const pageNumber = this.queryStr;
+    const pageNumber = Number(this.queryStr) + 1;
     let skipValue = resultPerPage * (pageNumber - 1);
     this.query = this.query.limit(resultPerPage).skip(skipValue);
     return this;

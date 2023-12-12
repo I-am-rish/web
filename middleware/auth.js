@@ -3,12 +3,13 @@ const User = require("../models/userModel");
 
 //Auth for user
 exports.isAuthenticatedUser = async (req, res, next) => {
+  console.log(req.user);
   try {
     const { token } = req.cookies;
     if (!token) {
       return res
         .status(401)
-        .json({ msg: "Please login to access this resources" });
+        .json({ message: "Please login to access this resources" });
     }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = await User.findById(decoded.id);
@@ -21,11 +22,12 @@ exports.isAuthenticatedUser = async (req, res, next) => {
 
 //Auth for admin
 exports.authorizeRole = async (req, res, next) => {
-  if (req.user.role === "admin") {
-    next();
-  } else {
-    return res
-      .status(403)
-      .json({ msg: "You are not authorized to perform this action." });
-  }
+  console.log("admin", req.user);
+  // if (req.user.role === "admin") {
+  //   next();
+  // } else {
+  //   return res
+  //     .status(403)
+  //     .json({ message: "You are not authorized to perform this action." });
+  // }
 };

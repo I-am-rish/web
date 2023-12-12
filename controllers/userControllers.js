@@ -17,14 +17,16 @@ exports.registerUser = async (req, res, next) => {
         });
       }
       // create a new user and save it to the database
-      user = new User({
+      user = User.create({
         name,
         email,
         mobile,
         password,
       });
       // await user.save();
-      return res.status(201).json({ success: true, message: "User created" });
+      return res
+        .status(201)
+        .json({ success: true, message: "User created", user });
     } else {
       return res.status(400).json({
         success: false,
@@ -189,7 +191,7 @@ exports.forgotPassword = async (req, res, next) => {
       }
     }
   } catch (error) {
-    return res.status(401).json({ success: false, msg: error.message });
+    return res.status(401).json({ success: false, message: error.message });
   }
 };
 
@@ -245,14 +247,14 @@ exports.deleteAccount = async (req, res, next) => {
     if (!deletedUser) {
       return res.status(400).json({
         success: false,
-        msg: "Couldn't Delete User",
+        message: "Couldn't Deleted User",
       });
     }
-    return res.status(200).json({ success: true, msg: "Deleted Successfully" });
+    return res.status(200).json({ success: true, message: "Deleted Successfully" });
   } catch (error) {
     return res
       .status(500)
-      .json({ success: false, msg: "Internal Server Error" });
+      .json({ success: false, message: "Internal Server Error" });
   }
 };
 
@@ -265,8 +267,7 @@ exports.allUsers = async (req, res, next) => {
     const apiFeatures = new ApiFeatures(User.find(), pageNumber).pagination(
       resultPerPage
     );
-    // .search();
-
+    
     const users = await apiFeatures.query;
 
     if (!users) {
@@ -291,24 +292,24 @@ exports.deleteUser = async (req, res, next) => {
     const { id } = req.query;
     const user = await User.findById({ _id: id });
     if (!user) {
-      return res.status(404).json({ msg: "User Not Found!" });
+      return res.status(404).json({ message: "User Not Found!" });
     }
 
     const deletedUser = await User.findOneAndDelete({ _id: id });
     if (!deletedUser) {
       return res.status(400).json({
         success: false,
-        msg: "User couldn't deleted",
+        message: "User couldn't deleted",
       });
     }
     return res.status(200).json({
       success: true,
-      msg: "User Deleted Successfully",
+      message: "User Deleted Successfully",
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      msg: "Error In Deleting The User",
+      message: "Error In Deleting The User",
       error: error.message,
     });
   }
@@ -321,7 +322,7 @@ exports.updateRole = async (req, res, next) => {
     if (!role) {
       return res
         .status(400)
-        .json({ success: false, msg: "Please provide Role" });
+        .json({ success: false, message: "Please provide Role" });
     }
     const newRole = { role };
     const userId = req.query.id;
@@ -332,17 +333,17 @@ exports.updateRole = async (req, res, next) => {
     if (!updatedUser) {
       return res
         .status(400)
-        .json({ success: false, msg: "Something Went Wrong" });
+        .json({ success: false, message: "Something Went Wrong" });
     }
     return res.status(200).json({
       success: true,
-      msg: "Successfully Updated Role!",
+      message: "Successfully Updated Role!",
       role,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      msg: error.message,
+      message: error.message,
     });
   }
 };
