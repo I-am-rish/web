@@ -3,9 +3,8 @@ const User = require("../models/userModel");
 
 //Auth for user
 exports.isAuthenticatedUser = async (req, res, next) => {
-  console.log(req.user);
   try {
-    const { token } = req.cookies;
+    const token = req.headers.authorization;
     if (!token) {
       return res
         .status(401)
@@ -22,12 +21,11 @@ exports.isAuthenticatedUser = async (req, res, next) => {
 
 //Auth for admin
 exports.authorizeRole = async (req, res, next) => {
-  console.log("admin", req.user);
-  // if (req.user.role === "admin") {
-  //   next();
-  // } else {
-  //   return res
-  //     .status(403)
-  //     .json({ message: "You are not authorized to perform this action." });
-  // }
+  if (req.user.role === "admin") {
+    next();
+  } else {
+    return res
+      .status(403)
+      .json({ message: "You are not authorized to perform this action." });
+  }
 };

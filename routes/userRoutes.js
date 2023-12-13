@@ -27,7 +27,7 @@ router.route("/user/profile/update").put(isAuthenticatedUser, updateProfile);
 router.route("/user/delete").delete(isAuthenticatedUser, deleteAccount);
 
 //admin routes
-router.route("/admin/users").get( allUsers);
+router.route("/admin/users").get(isAuthenticatedUser, authorizeRole, allUsers);
 router
   .route("/admin/users/user/delete")
   .delete(isAuthenticatedUser, authorizeRole, deleteUser);

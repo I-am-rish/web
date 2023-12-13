@@ -10,10 +10,10 @@ exports.registerUser = async (req, res, next) => {
   try {
     let user = await User.findOne({ email });
     if (!user) {
-      if (password.length < 8) {
+      if (password.length < 6) {
         return res.status(400).json({
           success: false,
-          message: "Password must be more then 8 characters",
+          message: "Password must be more then 6 characters",
         });
       }
       // create a new user and save it to the database
@@ -64,7 +64,7 @@ exports.loginUser = async (req, res, next) => {
       } else {
         return res.status().json({
           success: false,
-          message: "Password didn't matched",
+          message: "Password didn't match",
         });
       }
     }
@@ -250,7 +250,9 @@ exports.deleteAccount = async (req, res, next) => {
         message: "Couldn't Deleted User",
       });
     }
-    return res.status(200).json({ success: true, message: "Deleted Successfully" });
+    return res
+      .status(200)
+      .json({ success: true, message: "Deleted Successfully" });
   } catch (error) {
     return res
       .status(500)
@@ -267,7 +269,7 @@ exports.allUsers = async (req, res, next) => {
     const apiFeatures = new ApiFeatures(User.find(), pageNumber).pagination(
       resultPerPage
     );
-    
+
     const users = await apiFeatures.query;
 
     if (!users) {
@@ -288,8 +290,8 @@ exports.allUsers = async (req, res, next) => {
 
 //delete a user {Admin}
 exports.deleteUser = async (req, res, next) => {
+  const { id } = req.query;
   try {
-    const { id } = req.query;
     const user = await User.findById({ _id: id });
     if (!user) {
       return res.status(404).json({ message: "User Not Found!" });
