@@ -263,14 +263,15 @@ exports.deleteAccount = async (req, res, next) => {
 //get all user (admin)
 exports.allUsers = async (req, res, next) => {
   try {
-    const pageNumber = req.query.pageNumber || 1;
     const resultPerPage = req.query.resultPerPage || 10;
+    // console.log("all users", req.query);
     const usersCount = await User.countDocuments();
-    const apiFeatures = new ApiFeatures(User.find(), pageNumber).pagination(
-      resultPerPage
-    );
+    const apiFeatures = new ApiFeatures(User.find(), req.query)
+      .pagination(resultPerPage)
+      .search();
 
     const users = await apiFeatures.query;
+    // console.log("users", users);
 
     if (!users) {
       return res.status(400).json({

@@ -23,7 +23,7 @@ const UserSchema = mongoose.Schema(
     password: {
       type: String,
       required: [true, "Please Enter Password"],
-      minLength: [8, "Password must contain 8 char.. "],
+      minLength: [6, "Password must contain 6 char.. "],
     },
     role: {
       type: String,
@@ -57,19 +57,6 @@ UserSchema.methods.generateJWTToken = function () {
 UserSchema.methods.comparePasswords = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
-
-//reset password
-// UserSchema.methods.generateResetPasswordToken = function () {
-//   //generate a new random token
-//   const resetToken = crypto.randomBytes(32).toString("hex");
-//   //creating hax of token to make secure
-//   this.resetPasswordToken = crypto
-//     .createHash("sha256")
-//     .update(resetToken)
-//     .digest("hex");
-//   this.resetPasswordExpire = Date.now() + 5 * 60 * 1000; //token expire after 10 minutes
-//   return resetToken;
-// };
 
 UserSchema.methods.generateResetPasswordOTP = function () {
   //generate a new random otp
