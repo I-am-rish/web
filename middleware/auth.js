@@ -21,11 +21,13 @@ exports.isAuthenticatedUser = async (req, res, next) => {
 
 //Auth for admin
 exports.authorizeRole = async (req, res, next) => {
-  if (req.user.role === "admin") {
-    next();
-  } else {
-    return res
-      .status(403)
-      .json({ message: "You are not authorized to perform this action." });
+  if (req.user) {
+    if (req.user.role === "admin") {
+      next();
+    } else {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to perform this action." });
+    }
   }
 };

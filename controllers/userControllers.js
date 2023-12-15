@@ -17,7 +17,7 @@ exports.registerUser = async (req, res, next) => {
         });
       }
       // create a new user and save it to the database
-      user = User.create({
+      user = await User.create({
         name,
         email,
         mobile,
@@ -199,7 +199,6 @@ exports.forgotPassword = async (req, res, next) => {
 exports.resetPassword = async (req, res, next) => {
   const { resetOTP, new_password } = req.body;
   try {
-    console.log(typeof resetOTP);
     if (!new_password) {
       return res.status(400).json({
         success: false,
@@ -212,7 +211,6 @@ exports.resetPassword = async (req, res, next) => {
       .update(resetOTP)
       .digest("hex");
 
-    console.log(resetPasswordOTP);
 
     const user = await User.findOne({
       resetPasswordOTP,
@@ -271,7 +269,6 @@ exports.allUsers = async (req, res, next) => {
       .search();
 
     const users = await apiFeatures.query;
-    // console.log("users", users);
 
     if (!users) {
       return res.status(400).json({
