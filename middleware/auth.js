@@ -19,7 +19,7 @@ exports.isAuthenticatedUser = async (req, res, next) => {
   }
 };
 
-//Auth for admin
+//Auth for admin //need work
 exports.authorizeRole = async (req, res, next) => {
   if (req.user) {
     if (req.user.role === "admin") {

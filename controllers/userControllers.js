@@ -76,7 +76,7 @@ exports.loginUser = async (req, res, next) => {
   }
 };
 
-//logout user
+//logout user  //need work
 exports.logOutUser = async (req, res, next) => {
   res.cookie("token", null, { expires: new Date(Date.now()), httpOnly: true });
 
@@ -226,7 +226,6 @@ exports.resetPassword = async (req, res, next) => {
     user.password = new_password;
     user.resetPasswordExpire = undefined;
     user.resetPasswordOTP = undefined;
-    console.log(user);
     await user.save();
     sendToken(user, 200, res);
   } catch (error) {
