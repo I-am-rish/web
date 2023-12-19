@@ -21,8 +21,9 @@ exports.isAuthenticatedUser = async (req, res, next) => {
 
 //Auth for admin //need work
 exports.authorizeRole = async (req, res, next) => {
+  // console.log(User.schema.obj.role.enum[0]);
   if (req.user) {
-    if (req.user.role === "admin") {
+    if (req.user.role === User.schema.path("role").enumValues[0]) {
       next();
     } else {
       return res

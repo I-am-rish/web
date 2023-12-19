@@ -76,9 +76,11 @@ exports.loginUser = async (req, res, next) => {
   }
 };
 
-//logout user  //need work
+//logout user
 exports.logOutUser = async (req, res, next) => {
-  res.cookie("token", null, { expires: new Date(Date.now()), httpOnly: true });
+  // res.cookie("token", null, { expires: new Date(Date.now()), httpOnly: true });
+  // console.log(req.header(''))
+  // console.log(req.header());
 
   res.status(200).json({
     success: true,
@@ -210,7 +212,6 @@ exports.resetPassword = async (req, res, next) => {
       .createHash("sha256")
       .update(resetOTP)
       .digest("hex");
-
 
     const user = await User.findOne({
       resetPasswordOTP,

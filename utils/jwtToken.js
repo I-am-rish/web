@@ -11,7 +11,8 @@ const sendToken = (user, statusCode, res) => {
   //   if (process.env.NODE_ENV === "production") {
   //     options.secure = true;
   //   }
-  res.status(statusCode).cookie("token", token, options).json({
+  // console.log(res.header('Authorization', token));
+  res.status(statusCode).header("Authorization", token, options).json({
     success: true,
     token,
     user,

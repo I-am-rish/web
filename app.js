@@ -10,8 +10,11 @@ app.use(cookieParser());
 
 //user routes
 const user = require("./routes/userRoutes");
-
 app.use("/api", user);
+
+//content pages routes
+const contentPage = require("./routes/contentPageRoutes");
+app.use("/api", contentPage);
 
 //middleware for err
 app.use(errorMiddleware);
