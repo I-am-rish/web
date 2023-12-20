@@ -3,26 +3,39 @@ const ApiFeatures = require("../utils/apiFeatures");
 const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail");
 const crypto = require("crypto");
+const joi = require("joi");
 
 //register user
 exports.registerUser = async (req, res, next) => {
   const { name, email, mobile, password } = req.body;
+  const schema = joi.object({
+    name: joi.string().required(),
+    email: joi
+      .string()
+      .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+      .lowercase()
+      .required(),
+    mobile: joi.number().required(),
+    password: joi.string().min(6).required(),
+  });
+  //validate the input against the schema
+  const { error } = schema.validate(req.body);
+  if (error)
+    return res
+      .status(401)
+      .json({ success: false, message: error.details[0].message });
+
   try {
     let user = await User.findOne({ email });
     if (!user) {
       if (password.length < 6) {
         return res.status(400).json({
           success: false,
-          message: "Password must be more then 6 characters",
+          message: "Password must be more than 6 characters",
         });
       }
       // create a new user and save it to the database
-      user = await User.create({
-        name,
-        email,
-        mobile,
-        password,
-      });
+      user = await User.create(req.body);
       // await user.save();
       return res
         .status(201)
@@ -45,12 +58,21 @@ exports.registerUser = async (req, res, next) => {
 exports.loginUser = async (req, res, next) => {
   const { email, password } = req.body;
   try {
-    if (!email || !password) {
-      return res.status(400).json({
+    const schema = joi.object({
+      email: joi
+        .string()
+        .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+        .lowercase()
+        .required(),
+      password: joi.string().min(6).required(),
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error)
+      return res.status(401).json({
         success: false,
-        message: "Please provide an email and password",
+        message: error.details[0].message,
       });
-    }
     let user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({
@@ -79,10 +101,11 @@ exports.loginUser = async (req, res, next) => {
 //logout user
 exports.logOutUser = async (req, res, next) => {
   // res.cookie("token", null, { expires: new Date(Date.now()), httpOnly: true });
-  // console.log(req.header(''))
   // console.log(req.header());
+  // console.log(res);
+  // console.log(req.header('Authorization'));
 
-  res.status(200).json({
+  res.status(200).header("Authorization", null).json({
     success: true,
     message: "Logged out",
   });
@@ -115,15 +138,26 @@ exports.getProfile = async (req, res, next) => {
 exports.updateProfile = async (req, res, next) => {
   try {
     const { name, email, mobile } = req.body;
+    const schema = joi.object({
+      name: joi.string().required(),
+      email: joi
+        .string()
+        .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
+        .lowercase()
+        .required(),
+      password: joi.string().min(6).required(),
+    });
 
-    const newData = {
-      name,
-      email,
-      mobile,
-    };
+    const { error } = schema.validate(req.body);
+    if (error)
+      return res.status(401).json({
+        success: false,
+        message: error.details[0].message,
+      });
+
     const updatedUser = await User.findOneAndUpdate(
       { _id: req.user._id },
-      newData,
+      req.body,
       { new: true, runValidators: true }
     );
 
@@ -261,6 +295,7 @@ exports.deleteAccount = async (req, res, next) => {
 //get all user (admin)
 exports.allUsers = async (req, res, next) => {
   try {
+    // console.log(req.headers.authorization);
     const resultPerPage = req.query.resultPerPage || 10;
     // console.log("all users", req.query);
     const usersCount = await User.countDocuments();
@@ -324,12 +359,23 @@ exports.updateRole = async (req, res, next) => {
         .status(400)
         .json({ success: false, message: "Please provide Role" });
     }
-    const newRole = { role };
-    const userId = req.query.id;
-    const updatedUser = await User.findOneAndUpdate({ _id: userId }, newRole, {
-      new: true,
-      runValidators: true,
+    const schema = joi.object({
+      role: joi.string().required(),
     });
+    const { error } = schema.validate(req.body);
+    if (error)
+      return res.status(401).json({
+        success: false,
+        message: error.details[0].message,
+      });
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: req.query.id },
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
     if (!updatedUser) {
       return res
         .status(400)

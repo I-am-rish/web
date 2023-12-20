@@ -12,7 +12,7 @@ const sendToken = (user, statusCode, res) => {
   //     options.secure = true;
   //   }
   // console.log(res.header('Authorization', token));
-  res.status(statusCode).header("Authorization", token, options).json({
+  res.status(statusCode).header("Authorization", token).json({
     success: true,
     token,
     user,

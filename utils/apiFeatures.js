@@ -26,6 +26,15 @@ class ApiFeatures {
     this.query = this.query.limit(resultPerPage).skip(skipValue);
     return this;
   }
+
+  //filter
+  filter() {
+    const queryCopy = { ...this.queryStr };
+    
+
+    return this;
+  }
+
 }
 
 module.exports = ApiFeatures;
