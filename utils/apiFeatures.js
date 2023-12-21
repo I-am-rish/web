@@ -5,17 +5,30 @@ class ApiFeatures {
   }
 
   search() {
-    const keyword = this.queryStr.keyword
-      ? {
+    const key = this.queryStr.key;
+    const keyword = this.queryStr.keyword;
+
+    switch (key) {
+      case "name":
+        this.query = this.query.find({
           name: {
-            $regex: this.queryStr.keyword,
+            $regex: keyword,
             $options: "i",
           },
-        }
-      : {};
-
-    this.query = this.query.find({ ...keyword });
-
+        });
+        break;
+      case "email":
+        this.query = this.query.find({
+          email: {
+            $regex: keyword,
+            $options: "i",
+          },
+        });
+        break;
+      case "mobile":
+        this.query = this.query.find({ mobile: keyword });
+        break;
+    }
     return this;
   }
 
@@ -26,15 +39,6 @@ class ApiFeatures {
     this.query = this.query.limit(resultPerPage).skip(skipValue);
     return this;
   }
-
-  //filter
-  filter() {
-    const queryCopy = { ...this.queryStr };
-    
-
-    return this;
-  }
-
 }
 
 module.exports = ApiFeatures;
