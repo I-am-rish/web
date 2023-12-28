@@ -11,6 +11,7 @@ const {
   updateRole,
   deleteAccount,
   deleteUser,
+  uploadImage,
 } = require("../controllers/userControllers");
 
 const { authorizeRole, isAuthenticatedUser } = require("../middleware/auth");
@@ -25,6 +26,7 @@ router.route("/password/reset").put(resetPassword);
 router.route("/user/profile").get(isAuthenticatedUser, getProfile);
 router.route("/user/profile/update").put(isAuthenticatedUser, updateProfile);
 router.route("/user/delete").delete(isAuthenticatedUser, deleteAccount);
+// router.route("/user/profile/avatar").post( uploadImage);
 
 //admin routes
 router.route("/admin/users").get(isAuthenticatedUser, authorizeRole, allUsers);

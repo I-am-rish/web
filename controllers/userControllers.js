@@ -4,6 +4,8 @@ const sendToken = require("../utils/jwtToken");
 const sendEmail = require("../utils/sendEmail");
 const crypto = require("crypto");
 const joi = require("joi");
+const multer = require("multer");
+const multerUpload = multer({ dest: "images" });
 
 //register user
 exports.registerUser = async (req, res, next) => {
@@ -178,6 +180,30 @@ exports.updateProfile = async (req, res, next) => {
       message: error.message || "Server Error",
     });
   }
+};
+
+//update profile
+// exports.uploadImage = multerUpload.single("avatar"),
+//   (req, res, next) => {
+//     // const image = req.file.filename;
+//     console.log(req.file);
+
+//     res.status(200).json({ success: true });
+
+//     // User.findByIdAndUpdate(req.user._id, { image }, { new: true }).exec(
+//     //   (err, user) => {
+//     //     if (err) return next(err);
+//     //     res.json(user);
+//     //   }
+//     // );
+//   };
+
+exports.uploadImage = multerUpload.single('avatar'),  (req, res) => {
+  console.log(req.body);
+
+  res.status(200).json({
+    success: true
+  })
 };
 
 //forget password
