@@ -139,7 +139,6 @@ exports.getProfile = async (req, res, next) => {
 //update profile
 exports.updateProfile = async (req, res, next) => {
   try {
-    const { name, email, mobile } = req.body;
     const schema = joi.object({
       name: joi.string().required(),
       email: joi
@@ -147,10 +146,10 @@ exports.updateProfile = async (req, res, next) => {
         .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
         .lowercase()
         .required(),
-      password: joi.string().min(6).required(),
+      mobile: joi.number().required(),
     });
 
-    const { error } = schema.validate(req.body);
+    const { error } = schema.validate(req.body.values);
     if (error)
       return res.status(401).json({
         success: false,
@@ -159,7 +158,7 @@ exports.updateProfile = async (req, res, next) => {
 
     const updatedUser = await User.findOneAndUpdate(
       { _id: req.user._id },
-      req.body,
+      req.body.values,
       { new: true, runValidators: true }
     );
 
@@ -182,29 +181,14 @@ exports.updateProfile = async (req, res, next) => {
   }
 };
 
-//update profile
-// exports.uploadImage = multerUpload.single("avatar"),
-//   (req, res, next) => {
-//     // const image = req.file.filename;
-//     console.log(req.file);
+(exports.uploadImage = multerUpload.single("avatar")),
+  (req, res) => {
+    console.log(req.body);
 
-//     res.status(200).json({ success: true });
-
-//     // User.findByIdAndUpdate(req.user._id, { image }, { new: true }).exec(
-//     //   (err, user) => {
-//     //     if (err) return next(err);
-//     //     res.json(user);
-//     //   }
-//     // );
-//   };
-
-exports.uploadImage = multerUpload.single('avatar'),  (req, res) => {
-  console.log(req.body);
-
-  res.status(200).json({
-    success: true
-  })
-};
+    res.status(200).json({
+      success: true,
+    });
+  };
 
 //forget password
 exports.forgotPassword = async (req, res, next) => {
